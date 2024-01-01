@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+</head>
+<body class="bg-gray-400 h-screen flex flex-col items-center justify-center">
+
+     <a href="{{ url_for('static', filename='sample/expense.xlsx') }}" class='mb-12 px-6 py-4 bg-white shadow-lg border border-black rounded-md'>Download Sample File</a>
+
+    <div>
+    <p class="mb-4">Drag and drop the excel file in the below area to see result</p>
+    </div>
+    <div id="drop-area" class="border-2 border-dashed border-gray-400 p-8 text-center cursor-pointer bg-white w-2/3">
+        <p class="mb-4 text-red-800">You can download sample expense excel sheet to use from the above link download link</p>
+        <p class="mb-4">In Excel file you can change the names from A,B,C... to real names. You can increase or decrease the number of friends by adding or deleting names columns</p>
+        <p class="mb-4">Likewise, you can insert or delete expense rows</p>
+        <p class="mb-4">Paid By is who paid and in the same row 1s or 0s/black can be set basis who paid, including self. The program automatically divides the same equally over all the people</p>
+        <input type="file" id="fileElem" multiple accept=".csv" class="hidden" />
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            let dropArea = document.getElementById('drop-area');
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false)
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false)
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false)
+            });
+
+            dropArea.addEventListener('drop', handleDrop, false);
+
+            function highlight(e) {
+                dropArea.classList.add('border-black');
+            }
+
+            function unhighlight(e) {
+                dropArea.classList.remove('border-black');
+            }
+
+            function handleDrop(e) {
+                let dt = e.dataTransfer;
+                let files = dt.files;
+
+                handleFiles(files);
+            }
+
+            function handleFiles(files) {
+                files = [...files];
+                files.forEach(uploadFile);
+            }
+
+            function uploadFile(file) {
+                let url = '/upload';
+                let formData = new FormData();
+
+                formData.append('file', file);
+
+                fetch(url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(data => {
+                    displayMessage(data);
+                })
+                .catch(error => console.error('Error:', error));
+            }
+
+            function displayMessage(message) {
+                dropArea.innerHTML = `<p>${message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
+
